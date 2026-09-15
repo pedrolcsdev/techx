@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: aulas
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/estudos_db}
+    username: ${DB_USERNAME:pedrolucas}
+    password: ${DB_PASSWORD:123456}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
