@@ -1,6 +1,6 @@
-package br.com.estudo.aulas.controller;
+package br.com.estudo.aulas.aula.controller;
 
-import br.com.estudo.aulas.model.Aluno;
+import br.com.estudo.aulas.aula.model.Aluno;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/aluno")
 public class AlunoController {
 
-    Aluno aluno = new Aluno("Pedro", 19, "101366");
+    Aluno aluno = new Aluno(null, "Pedro", 19, "101366");
 
     @GetMapping("/nome")
     public String getNome() {

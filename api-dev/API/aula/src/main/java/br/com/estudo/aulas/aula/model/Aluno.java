@@ -1,4 +1,4 @@
-package br.com.estudo.aulas.model;
+package br.com.estudo.aulas.aula.model;
 
 
 import jakarta.persistence.*;

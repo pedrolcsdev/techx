@@ -9,9 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>br.com.estudo</groupId>
-    <artifactId>aulas</artifactId>
+    <artifactId>api</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name/>
+    <packaging>pom</packaging>
+    <name>API</name>
     <description/>
     <url/>
     <licenses>
@@ -29,6 +30,10 @@
     <properties>
         <java.version>21</java.version>
     </properties>
+    <modules>
+        <module>aula</module>
+        <module>entregavel1_2</module>
+    </modules>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
