@@ -1,5 +1,3 @@
--- Sprint 5 — Sistema Acadêmico
--- 1. Listar alunos.
 SELECT
     id,
     nome,
@@ -7,14 +5,14 @@ SELECT
     data_nascimento
 FROM aluno;
 
--- 2. Listar professores.
+
 SELECT
     id,
     nome,
     email
 FROM professor;
 
--- 3. Buscar Banco de Dados pelo nome.
+
 SELECT
     id,
     nome,
@@ -22,7 +20,7 @@ SELECT
 FROM disciplina
 WHERE nome = 'Banco de Dados';
 
--- 4. Mostrar alunos e disciplinas em que estão matriculados.
+
 SELECT
     a.nome AS aluno,
     d.nome AS disciplina,
@@ -33,7 +31,7 @@ INNER JOIN aluno a
 INNER JOIN disciplina d
     ON m.disciplina_id = d.id;
 
--- 5. Mostrar disciplinas e seus professores.
+
 SELECT
     d.nome AS disciplina,
     p.nome AS professor
@@ -41,7 +39,7 @@ FROM disciplina d
 INNER JOIN professor p
     ON d.professor_id = p.id;
 
--- 6. Contar quantidade de alunos por disciplina.
+
 SELECT
     d.nome AS disciplina,
     COUNT(m.aluno_id) AS quantidade_alunos
@@ -50,7 +48,7 @@ LEFT JOIN matricula m
     ON d.id = m.disciplina_id
 GROUP BY d.id, d.nome;
 
--- 7. Calcular média de notas por aluno.
+
 SELECT
     a.nome AS aluno,
     AVG(n.valor) AS media
@@ -59,7 +57,7 @@ INNER JOIN nota n
     ON a.id = n.aluno_id
 GROUP BY a.id, a.nome;
 
--- 8. Mostrar alunos com média igual ou superior a 7.
+
 SELECT
     a.nome AS aluno,
     AVG(n.valor) AS media
@@ -69,7 +67,7 @@ INNER JOIN nota n
 GROUP BY a.id, a.nome
 HAVING AVG(n.valor) >= 7;
 
--- 9. Encontrar alunos com nota acima da média geral.
+
 SELECT nome
 FROM aluno
 WHERE id IN (
@@ -81,7 +79,7 @@ WHERE id IN (
     )
 );
 
--- 10. Mostrar alunos e notas da maior para a menor.
+
 SELECT
     a.nome AS aluno,
     n.valor AS nota
@@ -90,7 +88,7 @@ INNER JOIN aluno a
     ON n.aluno_id = a.id
 ORDER BY n.valor DESC;
 
--- 11. Contar faltas dos alunos.
+
 SELECT
     a.nome AS aluno,
     COUNT(*) AS faltas
@@ -100,7 +98,7 @@ INNER JOIN aluno a
 WHERE f.presente = FALSE
 GROUP BY a.id, a.nome;
 
--- 12. Mostrar cursos e suas disciplinas.
+
 SELECT
     c.nome AS curso,
     d.nome AS disciplina

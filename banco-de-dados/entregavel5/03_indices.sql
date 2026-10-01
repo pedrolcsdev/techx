@@ -1,6 +1,7 @@
--- Sprint 5 — Sistema Acadêmico
--- Índices para buscas por nome e para colunas usadas em relacionamentos/JOINs.
--- PK e UNIQUE já criam seus próprios índices no PostgreSQL.
+
+-- indices para buscas por nome e para colunas usadas em relacionamentos
+-- sao os indices mais usados para pesquisas
+
 
 CREATE INDEX idx_aluno_nome
 ON aluno(nome);

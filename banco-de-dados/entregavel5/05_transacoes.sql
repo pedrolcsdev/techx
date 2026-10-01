@@ -1,8 +1,6 @@
--- Sprint 5 — Sistema Acadêmico
--- Execute depois de 01_ddl.sql e 02_inserts.sql.
--- As transações principais usam CTEs com RETURNING para reaproveitar os IDs gerados.
 
--- Transação 1: cadastrar aluno e matrícula; confirma os dois registros juntos.
+
+-- cadastrar aluno e matrícula; confirma os dois registros juntos.
 BEGIN;
 
 WITH novo_aluno AS (
@@ -16,7 +14,7 @@ FROM novo_aluno;
 
 COMMIT;
 
--- Transação 2: cadastrar professor e disciplina; confirma os dois registros juntos.
+--cadastrar professor e disciplina; confirma os dois registros juntos.
 BEGIN;
 
 WITH novo_professor AS (
@@ -30,7 +28,7 @@ FROM novo_professor;
 
 COMMIT;
 
--- Exemplo de ROLLBACK: o aluno temporário não permanece cadastrado.
+--rollback
 BEGIN;
 
 INSERT INTO aluno (nome, email, data_nascimento)
@@ -38,7 +36,7 @@ VALUES ('Aluno Cancelado', 'aluno.cancelado@email.com', '2005-01-01');
 
 ROLLBACK;
 
--- Exemplo de SAVEPOINT e ROLLBACK TO SAVEPOINT.
+--ROLLBACK TO SAVEPOINT.
 BEGIN;
 
 SAVEPOINT antes_do_teste;

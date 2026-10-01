@@ -1,5 +1,3 @@
--- Sprint 5 — Sistema Acadêmico
--- Execute depois de 01_ddl.sql. Cada tabela recebe pelo menos 15 registros.
 
 INSERT INTO aluno (nome, email, data_nascimento)
 VALUES
