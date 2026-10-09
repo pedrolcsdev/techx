@@ -1,13 +1,13 @@
-package br.com.estudo.aulas;
+package br.com.techx.aula_sb;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class AulasApplication {
+public class AulaSbApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(AulasApplication.class, args);
+		SpringApplication.run(AulaSbApplication.class, args);
 	}
 
 }
