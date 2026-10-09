@@ -1,4 +1,4 @@
-# Sistema Acadêmico — Sprint 5
+# Sistema Acadêmico — Sprint 6
 
 ## Descrição
 
@@ -90,7 +90,7 @@ A secretaria pode consultar as tabelas acadêmicas previstas e inserir ou atuali
 ## Estrutura dos Arquivos
 
 ```text
-entregavel5/
+entregavel6/
 ├── README.md
 ├── 01_ddl.sql
 ├── 02_inserts.sql
@@ -98,12 +98,129 @@ entregavel5/
 ├── 04_consultas.sql
 ├── 05_transacoes.sql
 ├── 06_permissoes.sql
-└── 07_explain.sql
+├── 07_explain.sql
+├── 08_backup.sh
+└── 09_mongodb.js
 ```
+
+## Backup e retenção
+
+O script `08_backup.sh` gera um backup lógico no formato customizado do PostgreSQL (`pg_dump -Fc`), com data e hora no nome. Backups concluídos com mais de 30 dias são removidos. Se o `pg_dump` falhar, o arquivo temporário é apagado e o script termina com erro, sem publicar um backup incompleto.
+
+O script usa as variáveis padrão `PGHOST`, `PGPORT`, `PGUSER` e `PGPASSWORD` do cliente PostgreSQL quando necessárias. Para não expor senha no cron, configure o arquivo `.pgpass` do usuário que executará o agendamento, com permissão `0600`.
+`DB_NAME` deve conter apenas letras, números, `_` ou `-`.
+
+### Regra 3-2-1
+
+A regra recomenda manter **3 cópias** dos dados, em **2 tipos de mídia** diferentes, com **1 cópia fora do local principal**. O script cria um arquivo local; ele sozinho não completa a regra. Para completá-la, copie os arquivos de backup para outra mídia (por exemplo, outro servidor/disco) e mantenha uma cópia em outro local físico ou em armazenamento remoto. Restrinja o acesso a esses destinos e teste a restauração periodicamente.
+
+```bash
+chmod +x entregavel6/08_backup.sh
+DB_NAME=sistema_academico BACKUP_DIR=/var/backups/postgresql ./entregavel6/08_backup.sh
+```
+
+O usuário do sistema precisa ter permissão de escrita em `BACKUP_DIR`. Sem essa variável, os arquivos são gravados em `entregavel6/backups/`.
+
+### Agendamento diário
+
+Edite o crontab do usuário que tem acesso ao banco (`crontab -e`) e inclua a linha abaixo, substituindo o caminho pelo caminho absoluto deste repositório:
+
+```cron
+0 2 * * * DB_NAME=sistema_academico BACKUP_DIR=/var/backups/postgresql /caminho/absoluto/banco-de-dados/entregavel6/08_backup.sh
+```
+
+A expressão `0 2 * * *` executa o script diariamente às 02:00, no fuso horário configurado para o serviço cron.
+
+### Teste de restauração e integridade
+
+Faça o teste em um banco separado para preservar o banco original. No host de PostgreSQL, crie o banco de teste, restaure o arquivo customizado mais recente e compare as contagens antes do backup e depois da restauração:
+
+```bash
+createdb sistema_academico_teste
+pg_restore --no-owner --no-privileges --dbname=sistema_academico_teste /var/backups/postgresql/postgres_sistema_academico_AAAAMMDD_HHMMSS.dump
+```
+
+Execute a consulta abaixo no banco de origem antes do backup e no banco restaurado. A restauração está íntegra quando cada contagem coincide com a anotada na origem.
+
+```sql
+SELECT 'aluno' AS tabela, COUNT(*) FROM aluno
+UNION ALL SELECT 'professor', COUNT(*) FROM professor
+UNION ALL SELECT 'disciplina', COUNT(*) FROM disciplina
+UNION ALL SELECT 'matricula', COUNT(*) FROM matricula
+UNION ALL SELECT 'curso', COUNT(*) FROM curso
+UNION ALL SELECT 'turma', COUNT(*) FROM turma
+UNION ALL SELECT 'avaliacao', COUNT(*) FROM avaliacao
+UNION ALL SELECT 'nota', COUNT(*) FROM nota
+UNION ALL SELECT 'frequencia', COUNT(*) FROM frequencia
+UNION ALL SELECT 'curso_disciplina', COUNT(*) FROM curso_disciplina
+ORDER BY tabela;
+```
+
+Conecte-se a cada banco com `psql -d NOME_DO_BANCO`, execute a consulta e compare os resultados. Após comparar, remova o banco de teste com `dropdb sistema_academico_teste`, se não precisar mantê-lo.
+
+## Introdução à modelagem NoSQL com MongoDB
+
+### Domínio e modelo
+
+O exemplo representa o mesmo Sistema Acadêmico das tabelas relacionais. O script `09_mongodb.js` cria o banco `sistema_academico_sprint6` e duas collections: `alunos` e `disciplinas`. Ele insere 10 alunos e 5 disciplinas (15 documentos ao todo). Alguns alunos têm campos opcionais como `telefone`, `acessibilidade` ou `observacao`, demonstrando que documentos da mesma collection podem ter campos diferentes.
+
+Execute com MongoDB disponível localmente:
+
+```bash
+mongosh entregavel6/09_mongodb.js
+```
+
+### Embedding e Referencing
+
+Cada aluno contém um array `matriculas`, e cada matrícula contém suas notas. Esses dados são embutidos (**Embedding**) porque a aplicação costuma consultar as matrículas e notas junto com o aluno.
+
+Cada matrícula guarda `disciplinaId`, que referencia o `_id` do documento na collection `disciplinas` (**Referencing**). A disciplina é compartilhada por vários alunos e pode ser consultada ou alterada independentemente; mantê-la em um único documento evita duplicar seu nome e carga horária em cada aluno. Em MongoDB, a referência não cria uma chave estrangeira automática: a aplicação consulta os dois documentos quando precisa dos dados relacionados.
+
+### Consultas, índices e explain
+
+O script demonstra `find()` com filtro de nota mínima, ordenação por nome e projeção apenas de nome e e-mail. Também consulta alunos por `disciplinaId`. Ele cria três índices: e-mail dos alunos (único), referência da disciplina nas matrículas e código da disciplina (único). Os dois últimos exemplos do script usam `explain("executionStats")` para exibir o plano e as estatísticas da consulta; procure `IXSCAN` para ver que um índice foi usado.
+
+Para verificar os dados inseridos no `mongosh`:
+
+```javascript
+const academia = db.getSiblingDB("sistema_academico_sprint6");
+academia.alunos.countDocuments({ sprint6: true });       // esperado: 10
+academia.disciplinas.countDocuments({ sprint6: true });  // esperado: 5
+```
+
+### Backup e restauração do MongoDB
+
+Para gerar um backup lógico das duas collections:
+
+```bash
+mongodump --db sistema_academico_sprint6 --out ./backups/mongodb
+```
+
+Inclua esses arquivos na mesma rotina 3-2-1: mantenha três cópias, em dois tipos de mídia, com uma cópia fora do local principal. O comando acima cria apenas uma cópia local; copie o diretório para outra mídia e para um destino remoto ou fora do local. Aplique retenção aos backups antigos e teste a restauração periodicamente.
+
+Restaure em um banco separado para testar, sem substituir o original:
+
+```bash
+mongorestore --nsFrom='sistema_academico_sprint6.*' --nsTo='sistema_academico_sprint6_teste.*' --dir=./backups/mongodb
+```
+
+No `mongosh`, confira as contagens no banco restaurado. Devem ser 10 alunos e 5 disciplinas:
+
+```javascript
+const teste = db.getSiblingDB("sistema_academico_sprint6_teste");
+teste.alunos.countDocuments({ sprint6: true });
+teste.disciplinas.countDocuments({ sprint6: true });
+```
+
+### Quando usar cada banco
+
+Para este domínio, PostgreSQL é mais adequado quando a prioridade é manter relacionamentos consistentes entre muitas tabelas, aplicar chaves estrangeiras e restrições, executar transações envolvendo várias entidades e produzir relatórios relacionais. MongoDB se destaca quando os dados são acessados como documentos completos, seus campos variam entre registros e a aplicação lê frequentemente o aluno junto com matrículas e notas. A referência à disciplina evita duplicação, mas a aplicação precisa garantir que ela exista e lidar com alterações relacionadas.
 
 ## Tecnologias
 
 - PostgreSQL
+- MongoDB
 - SQL
+- Bash
 - Git
 - GitHub
